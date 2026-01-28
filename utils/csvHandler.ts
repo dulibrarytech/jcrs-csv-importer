@@ -1,7 +1,7 @@
 // src/utils/csvHandler.ts
 import fs from "fs";
 import { parse } from "csv-parse";
-import db, { TABLE as DEFAULT_TABLE } from "../db/knex.js";
+import { db, TABLE as DEFAULT_TABLE } from "../db/knex.js";
 import { getRecordUuidsAndUpdateHandlesForCallNumbers } from "./getHandles.js";
 
 function guessDelimiter(sample: string): string {
@@ -108,7 +108,12 @@ export async function parseCsvAndInsert(
           relax_quotes: false, // quotes are fine when delimiter matches
         })
       )
-      .on("data", (rec: Record<string, any>) => rows.push(rec))
+      .on("data", (rec: Record<string, any>) => {
+        const row = toDbRow(rec);
+        if (!isAllEmpty(row)) {
+          rows.push(row);
+        }
+      })
       .on("end", () => resolve())
       .on("error", (err) => {
         // Attach some helpful context
@@ -117,32 +122,25 @@ export async function parseCsvAndInsert(
       });
   });
 
-  const toInsert = rows.map(toDbRow).filter((r) => !isAllEmpty(r));
-
-
   // Collect call_numbers for rows we are inserting (to target handle updates)
   const targetCallNumbers: string[] = Array.from(
     new Set(
-      toInsert
-        .map((r) => r.call_number)
+      rows.map((r) => r.call_number)
         .filter((v: any) => typeof v === "string" && v.trim().length > 0)
     )
   );
 
-
-
   const chunkSize = 500;
   let total = 0;
   await db.transaction(async (trx) => {
-    for (let i = 0; i < toInsert.length; i += chunkSize) {
-      const chunk = toInsert.slice(i, i + chunkSize);
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      const chunk = rows.slice(i, i + chunkSize);
       if (chunk.length) {
-        await trx(tableName).insert(chunk);
+        await trx(tableName).insert(chunk).onConflict('call_number').merge();
         total += chunk.length;
       }
     }
   });
-
 
   // After successful inserts, backfill handles only for these rows
   if (targetCallNumbers.length > 0) {

@@ -1,6 +1,6 @@
 // db/selftest.ts
 import "dotenv/config";
-import db, { TABLE } from "./knex.js";
+import { db, TABLE } from "./knex.js";
 
 (async () => {
   try {
