@@ -3,21 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CSV Importer</title>
+    <title>JCRS CSV Importer</title>
 
     <!-- Dropzone CSS (pin to a stable build) -->
     <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="{{ BASE_PATH }}/styles.css" />
   </head>
   <body>
     <div class="wrap">
-      <h1>CSV Importer</h1>
+      <h1>JCRS CSV Importer</h1>
       <p class="notice">Drag & drop a <strong>.csv</strong> file into the box below (or click it). The server will parse and insert rows into the database.</p>
 
       Current Status: <div id="status" class="status" role="status" aria-live="polite">Idle.</div>
 
       <!-- The Dropzone element. The JS below will attach to this by ID. -->
-      <form id="csvDropzone" action="/upload" class="dropzone" enctype="multipart/form-data">
+      <form id="csvDropzone" action="{{ BASE_PATH }}/upload" class="dropzone" enctype="multipart/form-data">
         <div class="dz-message" data-dz-message>
           <span>Drop your <strong>.csv</strong> here or click to select.</span>
         </div>
@@ -25,8 +25,6 @@
 
       <h2>Result</h2>
       <pre id="result" aria-live="polite">Waiting…</pre>
-
-      <footer>Tip: This page is served from <code>/public</code>. The upload endpoint is <code>/upload</code> and must match your Express router.</footer>
     </div>
 
     <!-- Dropzone JS (must come before our init script) -->
@@ -52,7 +50,7 @@
 
 
       const dz = new Dropzone('#csvDropzone', {
-        url: '/upload',
+        url: '{{ BASE_PATH }}/upload',
         paramName: 'file',
         maxFilesize: 70,
         acceptedFiles: 'text/csv,.csv,.CSV',
