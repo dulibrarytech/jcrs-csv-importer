@@ -24,9 +24,6 @@
           <span>Drop your <strong>.csv</strong> here or click to select.</span>
         </div>
       </form>
-
-      <h2>Result</h2>
-      <pre id="result" aria-live="polite">Waiting…</pre>
     </div>
 
     <footer>
@@ -45,11 +42,9 @@
       // Initialize Dropzone once the DOM is ready, error handling if it fails to load
       window.addEventListener('DOMContentLoaded', function () {
         const statusEl = document.getElementById('status');
-        const resultEl = document.getElementById('result');
 
         if (typeof window.Dropzone === 'undefined') {
           if (statusEl) statusEl.textContent = 'Dropzone failed to load. Check your network/ad blocker.';
-          if (resultEl) resultEl.textContent = 'Dropzone library not found: https://unpkg.com/dropzone@5/';
           console.error('Dropzone is undefined. Did the script fail to load?');
           return;
         }
@@ -63,44 +58,15 @@
         timeout: 0,
         createImageThumbnails: false,
         clickable: '#csvDropzone',
+        maxFiles: 1,
       });
 
         dz.on('init', function() {statusEl.textContent = 'Ready. Drop a .csv or click the box.';});
         dz.on('addedfile', function(file) {statusEl.textContent = 'File added: ' + (file && file.name ? file.name : '(unnamed)') + '. Ready to upload…';});
         dz.on('sending', function() {statusEl.textContent = 'Uploading…';});
         dz.on('totaluploadprogress', function(progress) {statusEl.textContent = 'Uploading… ' + Math.round(progress) + '%';});
-        dz.on('success', function (file, _resp) {
-          const el = document.getElementById('result');
-          let text = '';
-          try {
-            // Prefer the raw response text from XHR to avoid Dropzone parsing quirks
-            const raw = file && file.xhr ? file.xhr.responseText : '';
-            if (raw) {
-              try {
-                const parsed = JSON.parse(raw);
-                text = JSON.stringify(parsed, null, 2);
-              } catch (_e) {
-                // Not JSON; show as-is
-                text = raw;
-              }
-            } else if (typeof _resp !== 'undefined') {
-              // Fallback to Dropzone's provided resp argument
-              if (typeof _resp === 'string') {
-                text = _resp;
-              } else {
-                try { text = JSON.stringify(_resp, null, 2); } catch (_e2) { text = String(_resp); }
-              }
-            } else {
-              text = '(no response body)';
-            }
-          } catch (e) {
-            text = 'Success, but failed to read response: ' + (e && e.message ? e.message : String(e));
-          }
-          el.textContent = text;
-        });
 
         dz.on('error', function (file, err, xhr) {
-          const el = document.getElementById('result');
           let msg = '';
           if (err && typeof err === 'object' && err.message) {
             msg = err.message;
@@ -113,7 +79,7 @@
           } else {
             msg = 'Unknown error';
           }
-          el.textContent = 'Upload failed: ' + msg;
+          statusEl.textContent = 'Failed. QC your CSV and please try again.';
         });
 
         dz.on('maxfilesexceeded', function(file) {statusEl.textContent = 'Too many files. Only one file at a time.';});
@@ -123,7 +89,18 @@
           const statusText = file && file.xhr ? file.xhr.statusText : '';
           console.log('Upload complete:', status, statusText);
         });
-        dz.on('queuecomplete', function() {statusEl.textContent = 'Done. You can upload another file.';});
+        dz.on('queuecomplete', async function() {
+          if (!statusEl.textContent.includes('Failed')) {
+            statusEl.textContent = 'Successful. You can upload another file.';
+            await new Promise(res => setTimeout(res, 1000));
+            dz.removeAllFiles();
+            statusEl.textContent = 'Successful. You can upload another file.';
+          } else {
+            await new Promise(res => setTimeout(res, 1000));
+            dz.removeAllFiles();
+            statusEl.textContent = 'Failed. QC your CSV and please try again.';
+          }
+        });
       });
     </script>
   </body>
