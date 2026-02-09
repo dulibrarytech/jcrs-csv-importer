@@ -21,7 +21,12 @@ app.engine('html', engine());
 app.set('view engine', 'html');
 app.set('views', './public/templates');
 
-app.get(BASE_PATH, (req, res) => res.render('importer', { layout: false, BASE_PATH }));
+app.get(BASE_PATH, (req, res) => res.render('importer', {
+  layout: false,
+  basePath: BASE_PATH,
+  packageVersion: process.env.npm_package_version,
+  jcrsBasePath: process.env.JCRS_APP_BASE_PATH,
+}));
 
 // Routes
 app.use(`${BASE_PATH}/upload`, uploadRouter);

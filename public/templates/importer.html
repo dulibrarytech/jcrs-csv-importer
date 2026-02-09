@@ -7,17 +7,19 @@
 
     <!-- Dropzone CSS (pin to a stable build) -->
     <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" />
-    <link rel="stylesheet" href="{{ BASE_PATH }}/styles.css" />
+    <link rel="stylesheet" href="{{ basePath }}/styles.css" />
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+    <link rel="icon" href="{{ basePath }}/du-main-logo.svg" type="image/svg+xml">
   </head>
   <body>
     <div class="wrap">
-      <h1>JCRS CSV Importer</h1>
+      <h1>JCRS CSV Importer <span class="DU-title-red">@ DU</span></h1>
       <p class="notice">Drag & drop a <strong>.csv</strong> file into the box below (or click it). The server will parse and insert rows into the database.</p>
 
       Current Status: <div id="status" class="status" role="status" aria-live="polite">Idle.</div>
 
       <!-- The Dropzone element. The JS below will attach to this by ID. -->
-      <form id="csvDropzone" action="{{ BASE_PATH }}/upload" class="dropzone" enctype="multipart/form-data">
+      <form id="csvDropzone" action="{{ basePath }}/upload" class="dropzone" enctype="multipart/form-data">
         <div class="dz-message" data-dz-message>
           <span>Drop your <strong>.csv</strong> here or click to select.</span>
         </div>
@@ -26,6 +28,10 @@
       <h2>Result</h2>
       <pre id="result" aria-live="polite">Waiting…</pre>
     </div>
+
+    <footer>
+      <span><a href="{{ jcrsBasePath }}">JCRS @ DU PUI</a> | v{{ packageVersion }}</span>
+    </footer>
 
     <!-- Dropzone JS (must come before our init script) -->
     <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
@@ -50,7 +56,7 @@
 
 
       const dz = new Dropzone('#csvDropzone', {
-        url: '{{ BASE_PATH }}/upload',
+        url: '{{ basePath }}/upload',
         paramName: 'file',
         maxFilesize: 70,
         acceptedFiles: 'text/csv,.csv,.CSV',
